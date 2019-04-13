@@ -7,16 +7,16 @@ Packetman is an upcoming project that will help users analyze statistics about t
 This project will be written in Python.
 These statistics include packet loss and latency statistics (minimum ping, maximum ping, average ping) at the first hop and 
 packet loss and latency statistics for the target location. We will also list the servers through the output of a traceroute command.
-This program will update itself by outputting ping and traceroute commands to files while simultaniously reading and clearing those files.
+This program will update itself by outputting ping and trace-route commands to files while simultaneously reading and clearing those files.
 The data will be visualized with the matplotlib library. We have not yet decided on a GUI library.
 
 What the team members will work on:
 We plan to work together on data processing in the first part of the project then once that is working we will split off into different parts.
 Alex plans to work on visualizing the data with matplotlib while I plan to make an efficient algorithm for cleaning files without deleting data that has not been read yet.
-To make this more efficient we plan on using multithreading.
+To make this more efficient we plan on using multi-threading.
 Data processing, Visualization and Cleanup will be independent threads but they will by synced to avoid issues.
 Since cleanup will most likely take less time than visualization I plan to work together with Alex with the visualization thread once I finish the cleanup thread.
-We will likely work together extenively on the GUI.
+We will likely work together extensively on the GUI.
 
 What we hope to learn:
 We are both inexperienced with using GUIs so we hope to strengthen our knowledge in that area. 
@@ -24,7 +24,7 @@ Alex also lacks knowledge about networking so he hopes to learn more.
 I know a little about networking but also feel that I could improve my knowledge with this project.
 
 Mid-term Milestone:
-Before the middle of the term we plan to have the backend data processing done and the matplotlib graphs working. 
+Before the middle of the term we plan to have the back-end data processing done and the matplotlib graphs working. 
 For matplotlib we will need to figure out how to implement line graphs with horizontal lines for the minimum and maximum ping
 
 End of term goal:
