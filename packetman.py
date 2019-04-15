@@ -3,7 +3,7 @@ import subprocess
 #Read bash file and insert location in ping and traceroute commands
 target: str = "google.com"
 
-subprocess.call("./tracert.sh", shell=True)
+subprocess.call("./traceroute.sh", shell=True)
 
 #Read ping.sh and replace locations where appropriate
 #Get local from traceroute.txt (first hop)
