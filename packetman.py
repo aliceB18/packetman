@@ -3,13 +3,13 @@ import subprocess
 #Read bash file and insert location in ping and traceroute commands
 target: str = "google.com"
 
-subprocess.call("./traceroute.sh", shell=True)
+subprocess.call("./traceroute.sh")
 
 #Read ping.sh and replace locations where appropriate
 #Get local from traceroute.txt (first hop)
 local: str = "8.8.8.8"
 
-subprocess.call("./ping.sh", shell=True)
+subprocess.call("./ping.sh")
 
 localPings = {}
 targetPings = {}
@@ -28,4 +28,6 @@ avgTarget: int = sum(targetPings)/len(targetPings)
 
 #THREAD 3: Process data and visualize it in matplotlib
 
-#Implement a GUI
+#Implement a GUI (THREAD 3?)
+
+#THREAD 4: wait for input to kill running processes
