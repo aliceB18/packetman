@@ -1,2 +1,3 @@
 Running a bash script with Python: https://stackoverflow.com/questions/13745648/running-bash-script-from-within-python
 Installing traceroute command on Linux: https://linuxconfig.org/traceroute-basics
+Creating sets in Python: https://www.w3schools.com/python/python_sets.asp
