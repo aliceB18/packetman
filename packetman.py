@@ -12,7 +12,7 @@ localPings = {}
 targetPings = {}
 
 #Update the statistics for the ping sets
-def UpdateStates ():
+def UpdateStats ():
     maxLocal = max(localPings)
     minLocal = min(localPings)
     avgLocal = sum(localPings)/len(localPings)
