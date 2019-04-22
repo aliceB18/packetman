@@ -3,6 +3,7 @@ import threading
 
 #Read bash file and insert location in ping and traceroute commands
 target = "google.com"
+local = "";
 
 #Read ping.sh and replace locations where appropriate
 #Get local from traceroute.txt (first hop)
@@ -20,14 +21,22 @@ def UpdateStates ():
     minTarget = min(targetPings)
     avgTarget = sum(targetPings)/len(targetPings)
 
-#Run data collection processes
-def DataCollect ():
+#Get local address
+def GetAddress ():
+    print ("Getting address!")
     subprocess.run("./traceroute.sh", shell=True, check=True)
     #Get local
     #Set local
     local = "8.8.8.8"
+
+def Substitute ():
+    #Read ping.sh and replace the local and target
+    print ("Substitute!")
+
+#Run data collection processes
+def DataCollect ():
     subprocess.run("./ping.sh", shell=True, check=True)
-    print("Data collected!")
+    print ("Data collected!")
 
 def Clean ():
     print ("Cleaning...")
@@ -39,6 +48,8 @@ def GetKill ():
 
 #Main 
 if __name__ == "__main__":
+    GetAddress ()
+    Substitute ()
     collectionThread = threading.Thread(target=DataCollect)
     collectionThread.start()
     collectionThread.join()
