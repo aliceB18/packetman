@@ -1,55 +1,65 @@
 import subprocess
 import threading
 
+
 #Read bash file and insert location in ping and traceroute commands
 target = "google.com"
-local = "";
+local = ""
+
 
 #Read ping.sh and replace locations where appropriate
 #Get local from traceroute.txt (first hop)
 
+
 localPings = {}
 targetPings = {}
 
-#Update the statistics for the ping sets
-def UpdateStats ():
-    maxLocal = max(localPings)
-    minLocal = min(localPings)
-    avgLocal = sum(localPings)/len(localPings)
 
-    maxTarget = max(targetPings)
-    minTarget = min(targetPings)
-    avgTarget = sum(targetPings)/len(targetPings)
+#Update the statistics for the ping sets
+def UpdateStats() -> None:
+    maxLocal: int = max(localPings)
+    minLocal: int = min(localPings)
+    avgLocal: int = sum(localPings)/len(localPings)
+
+    maxTarget: int = max(targetPings)
+    minTarget: int = min(targetPings)
+    avgTarget: int = sum(targetPings)/len(targetPings)
+
 
 #Get local address
-def GetAddress ():
-    print ("Getting address!")
+def GetAddress () -> None:
+    print("Getting address!")
     subprocess.run("./traceroute.sh", shell=True, check=True)
     #Get local
     #Set local
     local = "8.8.8.8"
 
-def Substitute ():
-    #Read ping.sh and replace the local and target
-    print ("Substitute!")
 
-#Run data collection processes
-def DataCollect ():
+def Substitute () -> None:
+    # Read ping.sh and replace the local and target
+    print("Substitute!")
+
+
+    # Run data collection processes
+def DataCollect () -> None:
     subprocess.run("./ping.sh", shell=True, check=True)
-    print ("Data collected!")
+    print("Data collected!")
 
-def Clean ():
-    print ("Cleaning...")
-    
-def GetKill ():
-    user_in = str (input ("Enter 'K' to kill: "))
+
+def Clean () -> None:
+    print("Cleaning...")
+
+
+def GetKill () -> None:
+    user_in = str(input("Enter 'K' to kill: "))
     while (user_in != 'K'):
        user_in = str (input ("Enter 'K' to kill: "))
 
+
 #Main 
 if __name__ == "__main__":
-    GetAddress ()
-    Substitute ()
+    GetAddress()
+    Substitute()
     collectionThread = threading.Thread(target=DataCollect)
     collectionThread.start()
     collectionThread.join()
@@ -60,11 +70,6 @@ if __name__ == "__main__":
     killThread = threading.Thread(target=GetKill)
     killThread.start()
     killThread.join()
-
-
-
-
-
 
 
 #THREAD 1: Read localping.txt and targetping.txt, retreive minimum, maximum and average ping for each
