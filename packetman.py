@@ -1,5 +1,7 @@
+import logging
 import subprocess
 import threading
+import json
 
 
 #Read bash file and insert location in ping and traceroute commands
@@ -10,20 +12,20 @@ local = ""
 #Read ping.sh and replace locations where appropriate
 #Get local from traceroute.txt (first hop)
 
-
-localPings = {}
-targetPings = {}
+# Initialize holders for local/target ping latency data
+localPings = []
+targetPings = []
 
 
 #Update the statistics for the ping sets
 def UpdateStats() -> None:
-    maxLocal: int = max(localPings)
-    minLocal: int = min(localPings)
-    avgLocal: int = sum(localPings)/len(localPings)
+    maxLocal: float = max(localPings)
+    minLocal: float = min(localPings)
+    avgLocal: float = sum(localPings)/len(localPings)
 
-    maxTarget: int = max(targetPings)
-    minTarget: int = min(targetPings)
-    avgTarget: int = sum(targetPings)/len(targetPings)
+    maxTarget: float = max(targetPings)
+    minTarget: float = min(targetPings)
+    avgTarget: float = sum(targetPings)/len(targetPings)
 
 
 #Get local address
@@ -42,7 +44,45 @@ def Substitute () -> None:
 
     # Run data collection processes
 def DataCollect () -> None:
+    print("Pinging Website & Recording Data (This may take a bit)...")
     subprocess.run("./ping.sh", shell=True, check=True)
+
+    # Create File objects as lists of lines
+    localPingFile = open('localping.txt', 'r')
+    targetPingFile = open('targetping.txt', 'r')
+
+    # Retrieve first lines from localping.txt and targetping.txt
+    print("Retreiving currentLocalLine")                    #DEBUG
+    currentLocalLine = localPingFile.readline()
+    print("Retreiving currentTargetLine")                   #DEBUG
+    currentTargetLine = targetPingFile.readline()
+
+    print("Entering While Loop")                            #DEBUG
+
+    for i in range(100):
+        # Retrieve next line from localping.txt and targetping.txt
+        currentLocalLine = localPingFile.readline()
+        # print("Current Local Line: " + currentLocalLine)  # DEBUG
+        currentTargetLine = targetPingFile.readline()
+        # print("Current Target Line: " + currentTargetLine)  # DEBUG
+
+        # Split both current lines into lists
+        # Example Line:
+        # 64 bytes from 8.8.8.8: icmp_seq=1 ttl=119 time=14.6 ms
+        localLineData: [str] = currentLocalLine.split(" ")
+        targetLineData: [str] = currentTargetLine.split(" ")
+
+        if currentLocalLine == "\n":
+            # LocalLineData being empty
+            targetPings.append(float(targetLineData[6].strip("time=")))
+            break
+        else:
+            # Add latency data to localPings/targetPings
+            localPings.append(float(localLineData[6].strip("time=")))
+            targetPings.append(float(targetLineData[6].strip("time=")))
+
+    print("localPings: " + str(localPings))
+    print("targetPings: " + str(targetPings))
     print("Data collected!")
 
 
@@ -52,8 +92,9 @@ def Clean () -> None:
 
 def GetKill () -> None:
     user_in = str(input("Enter 'K' to kill: "))
+
     while (user_in != 'K'):
-       user_in = str (input ("Enter 'K' to kill: "))
+        user_in = str (input ("Enter 'K' to kill: "))
 
 
 #Main 
@@ -63,10 +104,10 @@ if __name__ == "__main__":
     collectionThread = threading.Thread(target=DataCollect)
     collectionThread.start()
     collectionThread.join()
-    
+
     cleanupThread = threading.Thread(target=Clean)
     cleanupThread.start()
-    
+
     killThread = threading.Thread(target=GetKill)
     killThread.start()
     killThread.join()
