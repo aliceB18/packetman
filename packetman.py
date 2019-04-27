@@ -1,7 +1,9 @@
 import logging
 import subprocess
 import threading
-import json
+from matplotlib import style
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 
 #Read bash file and insert location in ping and traceroute commands
@@ -13,8 +15,11 @@ local = ""
 #Get local from traceroute.txt (first hop)
 
 # Initialize holders for local/target ping latency data
-localPings = []
-targetPings = []
+localPings = {}
+targetPings = {}
+
+# set up visualization
+style.use('fivethirtyeight')
 
 
 #Update the statistics for the ping sets
@@ -42,48 +47,73 @@ def Substitute () -> None:
     print("Substitute!")
 
 
+def StaticVis(infoType: str) -> None:
+    """ (str) -> None
+
+        Takes as an input the name of the info desired to be visualized, then plots a
+        graph corresponding to said info and prints out related data. *called by DataCollect*
+
+        Currently only supports following infoTypes:
+            - "LOCAL_PING"
+            - "TARGET_PING"
+        """
+
+    if(infoType == "LOCAL_PING"):
+        # Create file object as list of lines
+        localPingFileData = open('localping.txt', 'r').read()
+        localPingLines: list = localPingFileData.split("\n")
+
+        for localLine in localPingLines:
+            if localLine == "":
+                break
+            # Skip first line of file
+            elif str(localLine).__contains__("PING") or not str(localLine).__contains__("icmp_seq="):
+                continue
+            else:
+                localLineSplit = localLine.split(" ")
+                print(localLineSplit)
+                localIndex: float = float(localLineSplit[4].strip("icmp_seq="))
+                localPings[localIndex]: float = float(localLineSplit[6].strip("time="))
+
+        localPingsX = [*localPings.keys()]
+        localPingsY = [*localPings.values()]
+        plt.title("Local Ping Latency")
+        plt.xlabel("Number of Packet sent")
+        plt.ylabel("Latency (in ms)")
+        plt.plot(localPingsX, localPingsY)
+        plt.axis([1, max(localPingsX) + 10, 10, max(localPingsY) + 10])
+
+    elif(infoType == "TARGET_PING"):
+        targetPingFileData = open('targetping.txt', 'r').read()
+        targetPingLines: list = targetPingFileData.split("\n")
+
+        for targetLine in targetPingLines:
+            if targetLine == "":
+                break
+            elif str(targetLine).__contains__("PING") or not str(targetLine).__contains__("icmp_seq="):
+                continue
+            else:
+                targetLineSplit = targetLine.split(" ")
+                targetIndex: float = float(targetLineSplit[4].strip("icmp_seq="))
+                targetPings[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+
+        targetPingsX = [*targetPings.keys()]
+        targetPingsY = [*targetPings.values()]
+        plt.title("Target Ping Latency")
+        plt.xlabel("Number of Packet sent")
+        plt.ylabel("Latency (in ms)")
+        plt.plot(targetPingsX, targetPingsY)
+        plt.axis([1, max(targetPingsX) + 10, 10, max(targetPingsY) + 10])
+
+    plt.show()
+
     # Run data collection processes
-def DataCollect () -> None:
+def DataCollect (visInfoTypes: list) -> None:
     print("Pinging Website & Recording Data (This may take a bit)...")
-    subprocess.run("./ping.sh", shell=True, check=True)
+    #subprocess.run("./ping.sh", shell=True, check=True)
+    for i in range(len(visInfoTypes)):
+        StaticVis(visInfoTypes[i])
 
-    # Create File objects as lists of lines
-    localPingFile = open('localping.txt', 'r')
-    targetPingFile = open('targetping.txt', 'r')
-
-    # Retrieve first lines from localping.txt and targetping.txt
-    print("Retreiving currentLocalLine")                    #DEBUG
-    currentLocalLine = localPingFile.readline()
-    print("Retreiving currentTargetLine")                   #DEBUG
-    currentTargetLine = targetPingFile.readline()
-
-    print("Entering While Loop")                            #DEBUG
-
-    for i in range(100):
-        # Retrieve next line from localping.txt and targetping.txt
-        currentLocalLine = localPingFile.readline()
-        # print("Current Local Line: " + currentLocalLine)  # DEBUG
-        currentTargetLine = targetPingFile.readline()
-        # print("Current Target Line: " + currentTargetLine)  # DEBUG
-
-        # Split both current lines into lists
-        # Example Line:
-        # 64 bytes from 8.8.8.8: icmp_seq=1 ttl=119 time=14.6 ms
-        localLineData: [str] = currentLocalLine.split(" ")
-        targetLineData: [str] = currentTargetLine.split(" ")
-
-        if currentLocalLine == "\n":
-            # LocalLineData being empty
-            targetPings.append(float(targetLineData[6].strip("time=")))
-            break
-        else:
-            # Add latency data to localPings/targetPings
-            localPings.append(float(localLineData[6].strip("time=")))
-            targetPings.append(float(targetLineData[6].strip("time=")))
-
-    print("localPings: " + str(localPings))
-    print("targetPings: " + str(targetPings))
-    print("Data collected!")
 
 
 def Clean () -> None:
@@ -99,18 +129,19 @@ def GetKill () -> None:
 
 #Main 
 if __name__ == "__main__":
-    GetAddress()
-    Substitute()
-    collectionThread = threading.Thread(target=DataCollect)
-    collectionThread.start()
-    collectionThread.join()
+    #GetAddress()
+    #Substitute()
+    #collectionThread = threading.Thread(target=DataCollect())
+    #collectionThread.start()
+    #collectionThread.join()
 
-    cleanupThread = threading.Thread(target=Clean)
-    cleanupThread.start()
+    #cleanupThread = threading.Thread(target=Clean)
+    #cleanupThread.start()
 
-    killThread = threading.Thread(target=GetKill)
-    killThread.start()
-    killThread.join()
+    DataCollect(["LOCAL_PING", "TARGET_PING"])
+    #killThread = threading.Thread(target=GetKill)
+    #killThread.start()
+    #killThread.join()
 
 
 #THREAD 1: Read localping.txt and targetping.txt, retreive minimum, maximum and average ping for each
