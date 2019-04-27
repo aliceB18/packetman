@@ -99,7 +99,7 @@ def StaticVis(infoType: str) -> None:
 
         # plot and Set axis dimensions
         plt.plot(localPingsX, localPingsY)
-        plt.axis([1, max(localPingsX) + 10, 10, max(localPingsY) + 10])
+        plt.axis([1, max(localPingsX), 10, max(localPingsY) + 5])
 
     elif(infoType == "TARGET_PING"):
 
@@ -135,7 +135,7 @@ def StaticVis(infoType: str) -> None:
 
         # Plot and set axis dimensions
         plt.plot(targetPingsX, targetPingsY)
-        plt.axis([1, max(targetPingsX) + 10, 10, max(targetPingsY) + 10])
+        plt.axis([1, max(targetPingsX), 10, max(targetPingsY) + 5])
 
     # Show whichever plot was constructed by function call
     plt.show()
@@ -144,7 +144,7 @@ def StaticVis(infoType: str) -> None:
 # Run data collection processes
 def DataCollect (visInfoTypes: list) -> None:
     print("Pinging Website & Recording Data (This may take a bit)...")
-    #subprocess.run("./ping.sh", shell=True, check=True)
+    subprocess.run("./ping.sh", shell=True, check=True)
     for i in range(len(visInfoTypes)):
         StaticVis(visInfoTypes[i])
 
@@ -163,19 +163,19 @@ def GetKill () -> None:
 
 #Main 
 if __name__ == "__main__":
-    #GetAddress()
-    #Substitute()
-    #collectionThread = threading.Thread(target=DataCollect())
-    #collectionThread.start()
-    #collectionThread.join()
+    GetAddress()
+    Substitute()
+    collectionThread = threading.Thread(target=DataCollect(["LOCAL_PING", "TARGET_PING"]))
+    collectionThread.start()
+    collectionThread.join()
 
-    #cleanupThread = threading.Thread(target=Clean)
-    #cleanupThread.start()
+    cleanupThread = threading.Thread(target=Clean)
+    cleanupThread.start()
 
-    DataCollect(["LOCAL_PING", "TARGET_PING"])
-    #killThread = threading.Thread(target=GetKill)
-    #killThread.start()
-    #killThread.join()
+    #DataCollect(["LOCAL_PING", "TARGET_PING"])
+    killThread = threading.Thread(target=GetKill)
+    killThread.start()
+    killThread.join()
 
 
 #THREAD 1: Read localping.txt and targetping.txt, retreive minimum, maximum and average ping for each
