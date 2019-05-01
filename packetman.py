@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-#Read bash file and insert location in ping and traceroute commands
+# Read bash file and insert location in ping and traceroute commands
 target = "google.com"
 local = ""
 
 
-#Read ping.sh and replace locations where appropriate
-#Get local from traceroute.txt (first hop)
+# Read ping.sh and replace locations where appropriate
+# Get local from traceroute.txt (first hop)
 
 # Initialize holders for local/target ping latency data
 localPings = {}
@@ -22,7 +22,7 @@ targetPings = {}
 style.use('fivethirtyeight')
 
 
-#Update the statistics for the ping sets
+# Update the statistics for the ping sets
 def UpdateStats() -> None:
     maxLocal: float = max(localPings)
     minLocal: float = min(localPings)
@@ -33,14 +33,14 @@ def UpdateStats() -> None:
     avgTarget: float = sum(targetPings)/len(targetPings)
 
 
-#Get local address
+# Get local address
 def GetAddress () -> None:
     """ Not yet documented
     """
     print("Getting address!")
     subprocess.run("./traceroute.sh", shell=True, check=True)
-    #Get local
-    #Set local
+    # Get local
+    # Set local
     local = "8.8.8.8"
 
 
@@ -86,7 +86,6 @@ def StaticVis(infoType: str) -> None:
 
                 # Retrieve latency of package (in milliseconds)
                 localPings[localIndex]: float = float(localLineSplit[6].strip("time="))
-
 
         # Store localPings info for easier use
         localPingsX: list = [*localPings.keys()]        # List of Package sequence numbers
@@ -142,48 +141,50 @@ def StaticVis(infoType: str) -> None:
 
 
 # Run data collection processes
-def DataCollect (visInfoTypes: list) -> None:
+def DataCollect () -> None:
+    # Call ping script
     print("Pinging Website & Recording Data (This may take a bit)...")
     subprocess.run("./ping.sh", shell=True, check=True)
+
+
+def Visualize (visInfoTypes: list) -> None:
+    print("Preparing visualization...")
+    # calls visualize for each ping type
     for i in range(len(visInfoTypes)):
         StaticVis(visInfoTypes[i])
 
 
-
 def Clean () -> None:
     print("Cleaning...")
+    subprocess.run("./rm.sh", shell=True, check=True)
 
 
-def GetKill () -> None:
-    user_in = str(input("Enter 'K' to kill: "))
-
-    while (user_in != 'K'):
-        user_in = str (input ("Enter 'K' to kill: "))
-
-
-#Main 
+# Main
 if __name__ == "__main__":
+    # Have user input target
+
+    # User traceroute to get local
     GetAddress()
+
+    # Substitute these values in bash scripts
     Substitute()
-    collectionThread = threading.Thread(target=DataCollect(["LOCAL_PING", "TARGET_PING"]))
-    collectionThread.start()
-    collectionThread.join()
 
-    cleanupThread = threading.Thread(target=Clean)
-    cleanupThread.start()
+    while True:
+        # Data collection
+        collectionThread = threading.Thread(target=DataCollect())
+        collectionThread.start()
+        collectionThread.join()
 
-    #DataCollect(["LOCAL_PING", "TARGET_PING"])
-    killThread = threading.Thread(target=GetKill)
-    killThread.start()
-    killThread.join()
+        # Visualization
+        visThread = threading.Thread(target=Visualize(["LOCAL_PING", "TARGET_PING"]))
+        visThread.start()
+        visThread.join()
 
+        # Cleanup
+        cleanupThread = threading.Thread(target=Clean)
+        cleanupThread.start()
+        cleanupThread.join()
 
-#THREAD 1: Read localping.txt and targetping.txt, retreive minimum, maximum and average ping for each
+    # Reset bash scripts to the default 8.8.8.8 target (will be easier to modify again)
 
-#THREAD 2: Cleanup lines after they have been read
-
-#THREAD 3: Process data and visualize it in matplotlib
-
-#Implement a GUI (THREAD 3?)
-
-#THREAD 4: wait for input to kill running processes
+    # Somehow have the user trigger a graceful exit
