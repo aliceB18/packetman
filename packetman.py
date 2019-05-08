@@ -1,15 +1,15 @@
 import logging
 import subprocess
 import threading
+
+# Visuals
 from matplotlib import style
 import matplotlib.pyplot as plt
+
+# File management
+from shutil import move
+from os import remove
 import matplotlib.animation as animation
-
-
-# Read bash file and insert location in ping and traceroute commands
-target = "google.com"
-local = ""
-
 
 # Read ping.sh and replace locations where appropriate
 # Get local from traceroute.txt (first hop)
@@ -33,22 +33,92 @@ def UpdateStats() -> None:
     avgTarget: float = sum(targetPings)/len(targetPings)
 
 
+def InitScripts () -> None:
+    """ Create scripts with a default format so the variables can be found easily
+    """
+    f = open("ping.sh", "w+")
+    f.write("#!/bin/bash\n ping -i .200 -c 20 LOCAL > localping.txt\n ping -i .200 -c 20 TARGET > targetping.txt")
+    f.close()
+
+    f = open("traceroute.sh", "w+")
+    f.write("#!/bin/bash\n rm traceroute.txt\n sudo -S traceroute -I -n TARGET > traceroute.txt")
+    f.close()
+
+    subprocess.run("./perms.sh", shell=True, check=True)
+
+
+def GetTarget () -> None:
+    """ None -> None
+
+        Get target location from user and update scripts
+    """
+    # Credit for input: https://www.w3schools.com/python/ref_func_input.asp
+    print("Please enter a location to test: ")
+    target = input()
+    GetLocal(target)  # Get local address from traceroute.sh and replace it in the ping script
+
+
 # Get local address
-def GetAddress () -> None:
-    """ Not yet documented
+def GetLocal (target) -> None:
+    """ Str -> None
+
+        Get local address from traceroute.sh and replace it in the ping script
     """
     print("Getting address!")
+    SubstutituteTrace(target)
     subprocess.run("./traceroute.sh", shell=True, check=True)
     # Get local
-    # Set local
     local = "8.8.8.8"
+    Substitute(local, target)
 
 
-def Substitute () -> None:
-    """Not yet documented
+def SubstutituteTrace (target) -> None:
+    """ Str -> None
+
+        Replace the TARGET locaiton in the traceroute script
     """
+    f = open("traceroute.sh", "r")
+    newF = open("traceroute2.sh", "w+")
+    lines = f.readlines()
+    for line in lines:
+        line = line.replace("TARGET", target)
+        newF.write(line)
+
+    f.close()
+    newF.close()
+
+    # Remove original file
+    remove("./traceroute.sh")
+    # Move new file
+    move("./traceroute2.sh", "./traceroute.sh")
+    subprocess.run("./perms.sh", shell=True, check=True)
+
+
+def Substitute (local, target) -> None:
+    """ Str, Str -> None
+
+        Substitute the local and target variables in the bash scripts
+    """
+    print("Substituting locations")
+    # Credit for file handling: https://www.guru99.com/reading-and-writing-files-in-python.html
     # Read ping.sh and replace the local and target
-    print("Substitute!")
+    f = open("ping.sh", "r")
+    newF = open("ping2.sh", "w+")
+    lines = f.readlines()
+    for line in lines:
+        line = line.replace("TARGET", target)
+        line = line.replace("LOCAL", local)
+        newF.write(line)
+
+    f.close()
+    newF.close()
+
+    # Credit for remove and move method: https://stackoverflow.com/questions/39086/search-and-replace-a-line-in-a-file-in-python
+    # Remove original file
+    remove("./ping.sh")
+    # Move new file
+    move("./ping2.sh", "./ping.sh")
+    subprocess.run("./perms.sh", shell=True, check=True)
 
 
 def StaticVis(infoType: str) -> None:
@@ -164,10 +234,10 @@ if __name__ == "__main__":
     # Have user input target
 
     # User traceroute to get local
-    GetAddress()
-
-    # Substitute these values in bash scripts
-    Substitute()
+    InitScripts()
+    targetThread = threading.Thread(target=GetTarget())
+    targetThread.start()
+    targetThread.join()
 
     while True:
         # Data collection
