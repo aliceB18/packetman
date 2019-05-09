@@ -68,7 +68,10 @@ def GetLocal (target) -> None:
     SubstutituteTrace(target)
     subprocess.run("./traceroute.sh", shell=True, check=True)
     # Get local
-    local = "8.8.8.8"
+    f = open("traceroute.txt", "r")
+    line = f.readlines()[2]
+    local = line.split(" ")[3]
+    print("LOCAL: " + local + " TARGET: " + target)
     Substitute(local, target)
 
 
