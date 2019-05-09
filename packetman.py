@@ -195,12 +195,11 @@ def StaticVis(infoType: str) -> None:
                 # Split valid lines
                 targetLineSplit = targetLine.split(" ")
                 # print(targetLineSplit)                                                     #DEBUG
-
                 # Retrieve package sequence (Ie: number of package being sent)
-                targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
+                targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
 
                 # Retrieve latency of package (in milliseconds)
-                targetPings[targetIndex]: float = float(targetLineSplit[7].strip("time="))
+                targetPings[targetIndex]: float = float(targetLineSplit[6].strip("time="))
 
         # Store targetPings info for easier use
         targetPingsX = [*targetPings.keys()]
