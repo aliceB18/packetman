@@ -3,6 +3,8 @@ import subprocess
 import threading
 
 # Visuals
+from threading import Thread
+
 from matplotlib import style
 import matplotlib.pyplot as plt
 
@@ -17,6 +19,10 @@ import matplotlib.animation as animation
 # Initialize holders for local/target ping latency data
 localPings = {}
 targetPings = {}
+
+# Global Vars
+global STOP_THREADS
+
 
 # set up visualization
 style.use('fivethirtyeight')
@@ -191,10 +197,10 @@ def StaticVis(infoType: str) -> None:
                 # print(targetLineSplit)                                                     #DEBUG
 
                 # Retrieve package sequence (Ie: number of package being sent)
-                targetIndex: float = float(targetLineSplit[4].strip("icmp_seq="))
+                targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
 
                 # Retrieve latency of package (in milliseconds)
-                targetPings[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                targetPings[targetIndex]: float = float(targetLineSplit[7].strip("time="))
 
         # Store targetPings info for easier use
         targetPingsX = [*targetPings.keys()]
@@ -215,12 +221,14 @@ def StaticVis(infoType: str) -> None:
 
 # Run data collection processes
 def DataCollect () -> None:
+
+
     # Call ping script
     print("Pinging Website & Recording Data (This may take a bit)...")
     subprocess.run("./ping.sh", shell=True, check=True)
 
-
 def Visualize (visInfoTypes: list) -> None:
+
     print("Preparing visualization...")
     # calls visualize for each ping type
     for i in range(len(visInfoTypes)):
@@ -228,12 +236,14 @@ def Visualize (visInfoTypes: list) -> None:
 
 
 def Clean () -> None:
+
     print("Cleaning...")
     subprocess.run("./rm.sh", shell=True, check=True)
 
 
 # Main
 if __name__ == "__main__":
+    STOP_THREADS = False
     # Have user input target
 
     # User traceroute to get local
@@ -243,20 +253,25 @@ if __name__ == "__main__":
     targetThread.join()
 
     while True:
-        # Data collection
-        collectionThread = threading.Thread(target=DataCollect())
-        collectionThread.start()
-        collectionThread.join()
+        try:
+            # Data collection
+            collectionThread: Thread = threading.Thread(target=DataCollect())
+            collectionThread.start()
+            collectionThread.join()
 
-        # Visualization
-        visThread = threading.Thread(target=Visualize(["LOCAL_PING", "TARGET_PING"]))
-        visThread.start()
-        visThread.join()
+            # Visualization
+            visThread = threading.Thread(target=Visualize(["LOCAL_PING", "TARGET_PING"]))
+            visThread.start()
+            visThread.join()
 
-        # Cleanup
-        cleanupThread = threading.Thread(target=Clean)
-        cleanupThread.start()
-        cleanupThread.join()
+            # Cleanup
+            cleanupThread = threading.Thread(target=Clean)
+            cleanupThread.start()
+            cleanupThread.join()
+
+        except (KeyboardInterrupt):
+            break
+
 
     # Reset bash scripts to the default 8.8.8.8 target (will be easier to modify again)
 

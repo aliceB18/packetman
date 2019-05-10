@@ -1,25 +1,25 @@
-PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
-64 bytes from 8.8.8.8: icmp_seq=1 ttl=120 time=34.4 ms
-64 bytes from 8.8.8.8: icmp_seq=2 ttl=120 time=19.0 ms
-64 bytes from 8.8.8.8: icmp_seq=3 ttl=120 time=34.1 ms
-64 bytes from 8.8.8.8: icmp_seq=4 ttl=120 time=24.1 ms
-64 bytes from 8.8.8.8: icmp_seq=5 ttl=120 time=20.7 ms
-64 bytes from 8.8.8.8: icmp_seq=6 ttl=120 time=31.9 ms
-64 bytes from 8.8.8.8: icmp_seq=7 ttl=120 time=19.4 ms
-64 bytes from 8.8.8.8: icmp_seq=8 ttl=120 time=24.7 ms
-64 bytes from 8.8.8.8: icmp_seq=9 ttl=120 time=29.1 ms
-64 bytes from 8.8.8.8: icmp_seq=10 ttl=120 time=114 ms
-64 bytes from 8.8.8.8: icmp_seq=11 ttl=120 time=30.9 ms
-64 bytes from 8.8.8.8: icmp_seq=12 ttl=120 time=19.5 ms
-64 bytes from 8.8.8.8: icmp_seq=13 ttl=120 time=30.3 ms
-64 bytes from 8.8.8.8: icmp_seq=14 ttl=120 time=31.8 ms
-64 bytes from 8.8.8.8: icmp_seq=15 ttl=120 time=93.4 ms
-64 bytes from 8.8.8.8: icmp_seq=16 ttl=120 time=34.3 ms
-64 bytes from 8.8.8.8: icmp_seq=17 ttl=120 time=21.0 ms
-64 bytes from 8.8.8.8: icmp_seq=18 ttl=120 time=18.4 ms
-64 bytes from 8.8.8.8: icmp_seq=19 ttl=120 time=25.8 ms
-64 bytes from 8.8.8.8: icmp_seq=20 ttl=120 time=16.8 ms
+PING www.google.com (172.217.3.164) 56(84) bytes of data.
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=1 ttl=54 time=65.1 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=2 ttl=54 time=30.6 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=3 ttl=54 time=33.8 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=4 ttl=54 time=24.6 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=5 ttl=54 time=28.6 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=6 ttl=54 time=31.4 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=7 ttl=54 time=25.6 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=8 ttl=54 time=30.6 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=9 ttl=54 time=31.5 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=10 ttl=54 time=26.2 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=11 ttl=54 time=21.3 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=12 ttl=54 time=92.0 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=13 ttl=54 time=39.9 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=14 ttl=54 time=23.7 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=15 ttl=54 time=27.1 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=16 ttl=54 time=32.7 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=17 ttl=54 time=58.7 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=18 ttl=54 time=20.3 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=19 ttl=54 time=31.1 ms
+64 bytes from sea15s11-in-f4.1e100.net (172.217.3.164): icmp_seq=20 ttl=54 time=24.3 ms
 
---- 8.8.8.8 ping statistics ---
-20 packets transmitted, 20 received, 0% packet loss, time 3823ms
-rtt min/avg/max/mdev = 16.891/33.734/114.093/24.263 ms
+--- www.google.com ping statistics ---
+20 packets transmitted, 20 received, 0% packet loss, time 3813ms
+rtt min/avg/max/mdev = 20.353/35.007/92.073/17.105 ms
