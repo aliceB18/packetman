@@ -16,13 +16,29 @@ import matplotlib.animation as animation
 # Read ping.sh and replace locations where appropriate
 # Get local from traceroute.txt (first hop)
 
+# Track number of tests
+tests: int = 0
+
 # Initialize holders for local/target ping latency data
+# Stores all ping test results
 localPings = {}
 targetPings = {}
 
+# Stores last ping test results
+lastLocal = {}
+lastTarget = {}
+
+# Store test stats
+maxLocal = 0.0
+minLocal = 0.0
+avgLocal = 0.0
+
+maxTarget = 0.0
+minTarget = 0.0
+avgTarget = 0.0
+
 # Global Vars
 global STOP_THREADS
-
 
 # set up visualization
 style.use('fivethirtyeight')
@@ -30,16 +46,39 @@ style.use('fivethirtyeight')
 
 # Update the statistics for the ping sets
 def UpdateStats() -> None:
-    maxLocal: float = max(localPings)
-    minLocal: float = min(localPings)
-    avgLocal: float = sum(localPings)/len(localPings)
+    global maxLocal, minLocal, avgLocal, maxTarget, minTarget, avgTarget
+    print("Updating Stats...")
+    # Update Local
+    maxLocal = max(localPings)
+    minLocal = min(localPings)
+    avgLocal = sum(localPings) / len(localPings)
+    # Update Target
+    maxTarget = max(targetPings)
+    minTarget = min(targetPings)
+    avgTarget = sum(targetPings) / len(targetPings)
+    # Print stats
+    PrintStats()
 
-    maxTarget: float = max(targetPings)
-    minTarget: float = min(targetPings)
-    avgTarget: float = sum(targetPings)/len(targetPings)
+
+def PrintStats() -> None:
+    global maxLocal, minLocal, avgLocal, maxTarget, minTarget, avgTarget, tests
+    print("TEST STATISTICS:")
+    print("LOCAL")
+    print("MIN: " + str(minLocal))
+    print("MAX: " + str(maxLocal))
+    print("AVG: " + str(avgLocal))
+    print("PACKETS: " + str(len(localPings)))
+    print("PACKET LOSS " + str((tests-len(localPings))/tests))
+
+    print("TARGET")
+    print("MIN: " + str(minTarget))
+    print("MAX: " + str(maxTarget))
+    print("AVG: " + str(avgTarget))
+    print("PACKETS: " + str(len(targetPings)))
+    print("PACKET LOSS: " + str((tests-len(targetPings))/tests))
 
 
-def InitScripts () -> None:
+def InitScripts() -> None:
     """ Create scripts with a default format so the variables can be found easily
     """
     f = open("ping.sh", "w+")
@@ -53,7 +92,7 @@ def InitScripts () -> None:
     subprocess.run("./perms.sh", shell=True, check=True)
 
 
-def GetTarget () -> None:
+def GetTarget() -> None:
     """ None -> None
 
         Get target location from user and update scripts
@@ -65,7 +104,7 @@ def GetTarget () -> None:
 
 
 # Get local address
-def GetLocal (target) -> None:
+def GetLocal(target) -> None:
     """ Str -> None
 
         Get local address from traceroute.sh and replace it in the ping script
@@ -81,7 +120,7 @@ def GetLocal (target) -> None:
     Substitute(local, target)
 
 
-def SubstutituteTrace (target) -> None:
+def SubstutituteTrace(target) -> None:
     """ Str -> None
 
         Replace the TARGET locaiton in the traceroute script
@@ -103,7 +142,7 @@ def SubstutituteTrace (target) -> None:
     subprocess.run("./perms.sh", shell=True, check=True)
 
 
-def Substitute (local, target) -> None:
+def Substitute(local, target) -> None:
     """ Str, Str -> None
 
         Substitute the local and target variables in the bash scripts
@@ -122,7 +161,8 @@ def Substitute (local, target) -> None:
     f.close()
     newF.close()
 
-    # Credit for remove and move method: https://stackoverflow.com/questions/39086/search-and-replace-a-line-in-a-file-in-python
+    # Credit for remove and move method:
+    # https://stackoverflow.com/questions/39086/search-and-replace-a-line-in-a-file-in-python
     # Remove original file
     remove("./ping.sh")
     # Move new file
@@ -141,7 +181,7 @@ def StaticVis(infoType: str) -> None:
             - "TARGET_PING" -> Statically Visualizes targetping.txt latency
     """
 
-    if(infoType == "LOCAL_PING"):
+    if infoType == "LOCAL_PING":
 
         # Format file object as list of lines
         localPingFileData = open('localping.txt', 'r').read()
@@ -154,7 +194,6 @@ def StaticVis(infoType: str) -> None:
             if str(localLine).__contains__("PING") or not str(localLine).__contains__("icmp_seq="):
                 continue
 
-
             else:
                 # Split valid lines
                 localLineSplit = localLine.split(" ")
@@ -164,11 +203,13 @@ def StaticVis(infoType: str) -> None:
                 localIndex: float = float(localLineSplit[4].strip("icmp_seq="))
 
                 # Retrieve latency of package (in milliseconds)
-                localPings[localIndex]: float = float(localLineSplit[6].strip("time="))
+                localPings[len(localPings)+1]: float = float(localLineSplit[6].strip("time="))
+                lastLocal[localIndex]: float = float(localLineSplit[6].strip("time="))
 
+        #print(localPings)
         # Store localPings info for easier use
-        localPingsX: list = [*localPings.keys()]        # List of Package sequence numbers
-        localPingsY: list = [*localPings.values()]      # List of Latency of each package corresponding to sequence
+        localPingsX: list = [*lastLocal.keys()]  # List of Package sequence numbers
+        localPingsY: list = [*lastLocal.values()]  # List of Latency of each package corresponding to sequence
 
         # Title plot and label axis
         plt.title("Local Ping Latency")
@@ -179,7 +220,7 @@ def StaticVis(infoType: str) -> None:
         plt.plot(localPingsX, localPingsY)
         plt.axis([1, max(localPingsX), 10, max(localPingsY) + 5])
 
-    elif(infoType == "TARGET_PING"):
+    elif infoType == "TARGET_PING":
 
         # Format file object as list of lines
         targetPingFileData = open('targetping.txt', 'r').read()
@@ -199,11 +240,13 @@ def StaticVis(infoType: str) -> None:
                 targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
 
                 # Retrieve latency of package (in milliseconds)
-                targetPings[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                targetPings[len(targetPings)+1]: float = float(targetLineSplit[6].strip("time="))
+                lastTarget[targetIndex]: float = float(targetLineSplit[6].strip("time="))
 
+        #print(targetPings)
         # Store targetPings info for easier use
-        targetPingsX = [*targetPings.keys()]
-        targetPingsY = [*targetPings.values()]
+        targetPingsX = [*lastTarget.keys()]
+        targetPingsY = [*lastTarget.values()]
 
         # Title Plot and label axis
         plt.title("Target Ping Latency")
@@ -219,23 +262,20 @@ def StaticVis(infoType: str) -> None:
 
 
 # Run data collection processes
-def DataCollect () -> None:
-
-
+def DataCollect() -> None:
     # Call ping script
     print("Pinging Website & Recording Data (This may take a bit)...")
     subprocess.run("./ping.sh", shell=True, check=True)
 
-def Visualize (visInfoTypes: list) -> None:
 
+def Visualize(visInfoTypes: list) -> None:
     print("Preparing visualization...")
     # calls visualize for each ping type
     for i in range(len(visInfoTypes)):
         StaticVis(visInfoTypes[i])
 
 
-def Clean () -> None:
-
+def Clean() -> None:
     print("Cleaning...")
     subprocess.run("./rm.sh", shell=True, check=True)
 
@@ -258,20 +298,25 @@ if __name__ == "__main__":
             collectionThread.start()
             collectionThread.join()
 
+            tests += 20
+
             # Visualization
             visThread = threading.Thread(target=Visualize(["LOCAL_PING", "TARGET_PING"]))
             visThread.start()
             visThread.join()
+
+            # Print Stats
+            statThread = threading.Thread(target=UpdateStats())
+            statThread.start()
+            statThread.join()
 
             # Cleanup
             cleanupThread = threading.Thread(target=Clean)
             cleanupThread.start()
             cleanupThread.join()
 
-        except (KeyboardInterrupt):
+        except KeyboardInterrupt:
             break
 
-
     # Reset bash scripts to the default 8.8.8.8 target (will be easier to modify again)
-
     # Somehow have the user trigger a graceful exit
