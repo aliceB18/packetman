@@ -218,7 +218,7 @@ def StaticVis(infoType: str) -> None:
 
         # plot and Set axis dimensions
         plt.plot(localPingsX, localPingsY)
-        plt.axis([1, max(localPingsX), 10, max(localPingsY) + 5])
+        plt.axis([1, max(localPingsX), 1, max(localPingsY) + 5])
 
     elif infoType == "TARGET_PING":
 
@@ -262,9 +262,12 @@ def StaticVis(infoType: str) -> None:
 
         # Plot and set axis dimensions
         plt.plot(targetPingsX, targetPingsY)
-        plt.axis([1, max(targetPingsX), 10, max(targetPingsY) + 5])
+        plt.axis([1, max(targetPingsX), 1, max(targetPingsY) + 5])
 
     # Show whichever plot was constructed by function call
+    plt.gcf().subplots_adjust(bottom=0.15)
+    plt.gcf().subplots_adjust(left=0.15)
+    plt.gcf().subplots_adjust(right=0.9)
     plt.show()
 
 
