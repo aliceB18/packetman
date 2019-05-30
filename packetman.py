@@ -49,13 +49,13 @@ def UpdateStats() -> None:
     global maxLocal, minLocal, avgLocal, maxTarget, minTarget, avgTarget
     print("Updating Stats...")
     # Update Local
-    maxLocal = max(localPings)
-    minLocal = min(localPings)
-    avgLocal = sum(localPings) / len(localPings)
+    maxLocal = max(localPings.values())
+    minLocal = min(localPings.values())
+    avgLocal = sum(localPings.values()) / len(localPings)
     # Update Target
-    maxTarget = max(targetPings)
-    minTarget = min(targetPings)
-    avgTarget = sum(targetPings) / len(targetPings)
+    maxTarget = max(targetPings.values())
+    minTarget = min(targetPings.values())
+    avgTarget = sum(targetPings.values()) / len(targetPings)
     # Print stats
     PrintStats()
 
@@ -237,11 +237,18 @@ def StaticVis(infoType: str) -> None:
                 targetLineSplit = targetLine.split(" ")
                 # print(targetLineSplit)                                                     #DEBUG
                 # Retrieve package sequence (Ie: number of package being sent)
-                targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
+                try:
+                    targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
+                except ValueError:
+                    targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
 
                 # Retrieve latency of package (in milliseconds)
-                targetPings[len(targetPings)+1]: float = float(targetLineSplit[6].strip("time="))
-                lastTarget[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                try:
+                    targetPings[len(targetPings)+1]: float = float(targetLineSplit[6].strip("time="))
+                    lastTarget[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                except ValueError:
+                    targetPings[len(targetPings) + 1]: float = float(targetLineSplit[7].strip("time="))
+                    lastTarget[targetIndex]: float = float(targetLineSplit[7].strip("time="))
 
         #print(targetPings)
         # Store targetPings info for easier use
