@@ -55,6 +55,9 @@ figure = plt.figure()
 localGraph = figure.add_subplot(211)
 targetGraph = figure.add_subplot(212, sharex=localGraph)
 
+localGraph.title.set_text('Local Latency')
+targetGraph.title.set_text('Target Latency')
+
 
 plt.xlabel("Number of Packet sent")
 plt.ylabel("Latency (in ms)")
@@ -212,7 +215,7 @@ def LiveVis(infoType: str):
                 # print(localLineSplit)                                                     #DEBUG
 
                 # Retrieve package sequence (Ie: number of package being sent)
-                localIndex: float = float(localLineSplit[4].strip("icmp_seq="))
+                localIndex: float = float(localLineSplit[4].strip("icmp_seq=")) + (tests - 20)
 
                 # Retrieve latency of package (in milliseconds)
                 localPingLatency: float = float(localLineSplit[6].strip("time="))
@@ -230,6 +233,7 @@ def LiveVis(infoType: str):
         # plot and Set axis dimensions
         localGraph.plot(localPingsX, localPingsY)
         localGraph.axis([1, max(localPingsX), 1, max(localPingsY) + 5])
+        localGraph.title.set_text('Local Latency')
 
     elif infoType == "TARGET_PING":
 
@@ -249,9 +253,9 @@ def LiveVis(infoType: str):
                 # print(targetLineSplit)                                                     #DEBUG
                 # Retrieve package sequence (Ie: number of package being sent)
                 try:
-                    targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
+                    targetIndex = float(targetLineSplit[4].strip("icmp_seq=")) + tests - 20
                 except ValueError:
-                    targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
+                    targetIndex = float(targetLineSplit[5].strip("icmp_seq=")) + tests - 20
 
                 # Retrieve latency of package (in milliseconds)
                 try:
@@ -272,6 +276,7 @@ def LiveVis(infoType: str):
         # plot and Set axis dimensions
         targetGraph.plot(targetPingsX, targetPingsY)
         targetGraph.axis([1, max(targetPingsX), 1, max(targetPingsY) + 5])
+        targetGraph.title.set_text('Target Latency')
 
 '''
 
