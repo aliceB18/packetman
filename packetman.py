@@ -6,7 +6,14 @@ import threading
 from threading import Thread
 
 from matplotlib import style
+#import matplotlib.pyplot as plt
+
+## Live Visuals
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import time
+from matplotlib import style
+
 
 # File management
 from shutil import move
@@ -42,6 +49,15 @@ global STOP_THREADS
 
 # set up visualization
 style.use('fivethirtyeight')
+
+plt.ion()
+figure = plt.figure()
+localGraph = figure.add_subplot(211)
+targetGraph = figure.add_subplot(212, sharex=localGraph)
+
+
+plt.xlabel("Number of Packet sent")
+plt.ylabel("Latency (in ms)")
 
 
 # Update the statistics for the ping sets
@@ -89,7 +105,8 @@ def InitScripts() -> None:
     f.write("#!/bin/bash\n rm traceroute.txt\n sudo -S traceroute -I -n TARGET > traceroute.txt")
     f.close()
 
-    subprocess.run("./perms.sh", shell=True, check=True)
+subprocess.run("./perms.sh", shell=True, check=True)
+
 
 
 def GetTarget() -> None:
@@ -170,12 +187,254 @@ def Substitute(local, target) -> None:
     subprocess.run("./perms.sh", shell=True, check=True)
 
 
-def StaticVis(infoType: str) -> None:
+def LiveVis(infoType: str):
+    #aniLocal = animation.FuncAnimation(figLocal, animate("LOCAL_PING"), interval=1000)
+    #aniTarget = animation.FuncAnimation(figTarget, animate("TARGET_PING"), interval=1000)
+
+
+    if infoType == "LOCAL_PING":
+
+        # Format file object as list of lines
+        localPingFileData = open('localping.txt', 'r').read()
+        localPingFormattedFile = open('localping_formatted.txt', 'w+')
+        localPingLines: list = localPingFileData.split("\n")
+
+        # Iterate through each line in total set of lines
+        for localLine in localPingLines:
+
+            # Skip first line of file as well as every other line which doesn't list immediate ping info
+            if str(localLine).__contains__("PING") or not str(localLine).__contains__("icmp_seq="):
+                continue
+
+            else:
+                # Split valid lines
+                localLineSplit = localLine.split(" ")
+                # print(localLineSplit)                                                     #DEBUG
+
+                # Retrieve package sequence (Ie: number of package being sent)
+                localIndex: float = float(localLineSplit[4].strip("icmp_seq="))
+
+                # Retrieve latency of package (in milliseconds)
+                localPingLatency: float = float(localLineSplit[6].strip("time="))
+                localPings[len(localPings) + 1]: float = localPingLatency
+                lastLocal[localIndex]: float = float(localLineSplit[6].strip("time="))
+
+                # Store localPings data in localping_formatted.txt
+                ## Also account for
+                localPingFormattedFile.write("{0},{1}\n".format(localIndex, localPingLatency))
+
+        # Store localPings info for easier use
+        localPingsX: list = [*lastLocal.keys()]  # List of Package sequence numbers
+        localPingsY: list = [*lastLocal.values()]  # List of Latency of each package corresponding to sequence
+
+        # plot and Set axis dimensions
+        localGraph.plot(localPingsX, localPingsY)
+        localGraph.axis([1, max(localPingsX), 1, max(localPingsY) + 5])
+
+    elif infoType == "TARGET_PING":
+
+        # Format file object as list of lines
+        targetPingFileData = open('targetping.txt', 'r').read()
+        targetPingLines: list = targetPingFileData.split("\n")
+
+        # Iterate through each line in total set of lines
+        for targetLine in targetPingLines:
+
+            # Skip first line of file as well as every other line which doesn't list immediate ping info
+            if str(targetLine).__contains__("PING") or not str(targetLine).__contains__("icmp_seq="):
+                continue
+            else:
+                # Split valid lines
+                targetLineSplit = targetLine.split(" ")
+                # print(targetLineSplit)                                                     #DEBUG
+                # Retrieve package sequence (Ie: number of package being sent)
+                try:
+                    targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
+                except ValueError:
+                    targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
+
+                # Retrieve latency of package (in milliseconds)
+                try:
+                    targetPingLatency: float = float(targetLineSplit[6].strip("time="))
+                    targetPings[len(localPings) + 1]: float = targetPingLatency
+                    lastTarget[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                except ValueError:
+                    targetPingLatency: float = float(targetLineSplit[7].strip("time="))
+                    targetPings[len(localPings) + 1]: float = targetPingLatency
+                    lastTarget[targetIndex]: float = float(targetLineSplit[7].strip("time="))
+
+
+
+        # Store localPings info for easier use
+        targetPingsX: list = [*lastTarget.keys()]  # List of Package sequence numbers
+        targetPingsY: list = [*lastTarget.values()]  # List of Latency of each package corresponding to sequence
+
+        # plot and Set axis dimensions
+        targetGraph.plot(targetPingsX, targetPingsY)
+        targetGraph.axis([1, max(targetPingsX), 1, max(targetPingsY) + 5])
+
+'''
+
+    # Format data from local/targetping.txt
+    formatData(infoType)
+
+    if (infoType == "LOCAL_PING"):
+        localPullData = open('localping_formatted.txt', 'r').read()
+
+        localDataArray = localPullData.split('\n')
+        localXArr = []
+        localYArr = []
+
+        for localDataLine in localDataArray:
+            if len(localDataLine) > 1:
+                localX, localY = localDataLine.split(',')
+                localXArr.append(float(localX))
+                localYArr.append(float(localY))
+
+        localGraph.clf()
+        localGraph.plot(localXArr, localYArr)
+
+    elif (infoType == "TARGET_PING"):
+        targetPullData = open('targetping_formatted.txt', 'r').read()
+
+        targetDataArray = targetPullData.split('\n')
+        targetXArr = []
+        targetYArr = []
+
+        for targetDataLine in targetDataArray:
+            if len(targetDataLine) > 1:
+                targetX, targetY = targetDataLine.split(',')
+                targetXArr.append(float(targetX))
+                targetYArr.append(float(targetY))
+
+        targetGraph.clf()
+        targetGraph.plot(targetXArr, targetYArr)
+
+'''
+'''
+    # Show whichever plot was constructed by function call
+    plt.gcf().subplots_adjust(bottom=0.15)
+    plt.gcf().subplots_adjust(left=0.15)
+    plt.gcf().subplots_adjust(right=0.9)
+    # plt.show()
+'''
+'''
     """ (str) -> None
 
+            Takes as an input the name of the info desired to be visualized, then plots a
+            graph corresponding to said info and prints out related data. *called by DataCollect*
+
+            Currently only supports following infoTypes:
+                - "LOCAL_PING"  -> Statically Visualizes localping.txt latency
+                - "TARGET_PING" -> Statically Visualizes targetping.txt latency
+    """
+
+    fig = plt.figure()
+
+
+    if infoType == "LOCAL_PING":
+
+        # Format file object as list of lines
+        localPingFileData = open('localping.txt', 'r').read()
+        localPingLines: list = localPingFileData.split("\n")
+
+        # Iterate through each line in total set of lines
+        for localLine in localPingLines:
+
+            # Skip first line of file as well as every other line which doesn't list immediate ping info
+            if str(localLine).__contains__("PING") or not str(localLine).__contains__("icmp_seq="):
+                continue
+
+            else:
+                # Split valid lines
+                localLineSplit = localLine.split(" ")
+                # print(localLineSplit)                                                     #DEBUG
+
+                # Retrieve package sequence (Ie: number of package being sent)
+                localIndex: float = float(localLineSplit[4].strip("icmp_seq="))
+
+                # Retrieve latency of package (in milliseconds)
+                localPings[len(localPings) + 1]: float = float(localLineSplit[6].strip("time="))
+                lastLocal[localIndex]: float = float(localLineSplit[6].strip("time="))
+
+        # print(localPings)
+        # Store localPings info for easier use
+        localPingsX: list = [*lastLocal.keys()]  # List of Package sequence numbers
+        localPingsY: list = [*lastLocal.values()]  # List of Latency of each package corresponding to sequence
+
+        # Title plot and label axis
+        plt.title("Local Ping Latency")
+        plt.xlabel("Number of Packet sent")
+        plt.ylabel("Latency (in ms)")
+
+
+
+        # plot and Set axis dimensions
+        ax1 = fig.add_subplot(max(localPingsX), max(localPingsY) + 5, 1)
+        ax1.clear()
+        ax1.plot(localPingsX, localPingsY)
+
+    elif infoType == "TARGET_PING":
+
+        # Format file object as list of lines
+        targetPingFileData = open('targetping.txt', 'r').read()
+        targetPingLines: list = targetPingFileData.split("\n")
+
+        # Iterate through each line in total set of lines
+        for targetLine in targetPingLines:
+
+            # Skip first line of file as well as every other line which doesn't list immediate ping info
+            if str(targetLine).__contains__("PING") or not str(targetLine).__contains__("icmp_seq="):
+                continue
+            else:
+                # Split valid lines
+                targetLineSplit = targetLine.split(" ")
+                # print(targetLineSplit)                                                     #DEBUG
+                # Retrieve package sequence (Ie: number of package being sent)
+                try:
+                    targetIndex = float(targetLineSplit[4].strip("icmp_seq="))
+                except ValueError:
+                    targetIndex = float(targetLineSplit[5].strip("icmp_seq="))
+
+                # Retrieve latency of package (in milliseconds)
+                try:
+                    targetPings[len(targetPings) + 1]: float = float(targetLineSplit[6].strip("time="))
+                    lastTarget[targetIndex]: float = float(targetLineSplit[6].strip("time="))
+                except ValueError:
+                    targetPings[len(targetPings) + 1]: float = float(targetLineSplit[7].strip("time="))
+                    lastTarget[targetIndex]: float = float(targetLineSplit[7].strip("time="))
+
+        # print(targetPings)
+        # Store targetPings info for easier use
+        targetPingsX = [*lastTarget.keys()]
+        targetPingsY = [*lastTarget.values()]
+
+        # Title Plot and label axis
+        plt.title("Target Ping Latency")
+        plt.xlabel("Number of Packet sent")
+        plt.ylabel("Latency (in ms)")
+
+        # Plot and set axis dimensions
+        #plt.plot(targetPingsX, targetPingsY)
+        plt.axis([1, max(targetPingsX), 1, max(targetPingsY) + 5])
+
+    # Show whichever plot was constructed by function call
+    plt.gcf().subplots_adjust(bottom=0.15)
+    plt.gcf().subplots_adjust(left=0.15)
+    plt.gcf().subplots_adjust(right=0.9)
+    ani = animation.FuncAnimation(fig, a, interval=1000)
+    plt.show()
+
+    ani = animation.FuncAnimation(fig, animate, interval=1000)
+    plt.show()
+'''
+
+
+
+def StaticVis(infoType: str) -> None:
+    """ (str) -> None
         Takes as an input the name of the info desired to be visualized, then plots a
         graph corresponding to said info and prints out related data. *called by DataCollect*
-
         Currently only supports following infoTypes:
             - "LOCAL_PING"  -> Statically Visualizes localping.txt latency
             - "TARGET_PING" -> Statically Visualizes targetping.txt latency
@@ -271,6 +530,7 @@ def StaticVis(infoType: str) -> None:
     plt.show()
 
 
+
 # Run data collection processes
 def DataCollect() -> None:
     # Call ping script
@@ -281,8 +541,25 @@ def DataCollect() -> None:
 def Visualize(visInfoTypes: list) -> None:
     print("Preparing visualization...")
     # calls visualize for each ping type
-    for i in range(len(visInfoTypes)):
-        StaticVis(visInfoTypes[i])
+
+    plt.xlabel("Number of Packet sent")
+    plt.ylabel("Latency (in ms)")
+
+    localGraph.clear()
+    LiveVis(visInfoTypes[0])
+    targetGraph.clear()
+    LiveVis(visInfoTypes[1])
+    figure.canvas.draw()
+
+    # Show whichever plot was constructed by function call
+    plt.gcf().subplots_adjust(bottom=0.15)
+    plt.gcf().subplots_adjust(left=0.15)
+    plt.gcf().subplots_adjust(right=0.9)
+    #plt.show()
+
+
+
+
 
 
 def Clean() -> None:
@@ -290,7 +567,7 @@ def Clean() -> None:
     subprocess.run("./rm.sh", shell=True, check=True)
 
 
-# Main
+#Main
 if __name__ == "__main__":
     STOP_THREADS = False
     # Have user input target
@@ -327,6 +604,3 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             break
-
-    # Reset bash scripts to the default 8.8.8.8 target (will be easier to modify again)
-    # Somehow have the user trigger a graceful exit
