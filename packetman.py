@@ -25,6 +25,7 @@ import matplotlib.animation as animation
 
 # Track number of tests
 tests: int = 0
+testsPerIteration: int = 20
 
 # Initialize holders for local/target ping latency data
 # Stores all ping test results
@@ -55,12 +56,14 @@ figure = plt.figure()
 localGraph = figure.add_subplot(211)
 targetGraph = figure.add_subplot(212, sharex=localGraph)
 
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.gcf().subplots_adjust(left=0.15)
+plt.gcf().subplots_adjust(right=0.9)
+
 localGraph.title.set_text('Local Latency')
 targetGraph.title.set_text('Target Latency')
 
 
-plt.xlabel("Number of Packet sent")
-plt.ylabel("Latency (in ms)")
 
 
 # Update the statistics for the ping sets
@@ -101,7 +104,8 @@ def InitScripts() -> None:
     """ Create scripts with a default format so the variables can be found easily
     """
     f = open("ping.sh", "w+")
-    f.write("#!/bin/bash\n ping -i .200 -c 20 LOCAL > localping.txt\n ping -i .200 -c 20 TARGET > targetping.txt")
+    f.write("#!/bin/bash\n cowsay 'Pinging Website and Recording data... this may take a while'\n")
+    f.write("ping -i .200 -c 20 LOCAL > localping.txt\n ping -i .200 -c 20 TARGET > targetping.txt")
     f.close()
 
     f = open("traceroute.sh", "w+")
@@ -190,7 +194,7 @@ def Substitute(local, target) -> None:
     subprocess.run("./perms.sh", shell=True, check=True)
 
 
-def LiveVis(infoType: str):
+def LiveVis(infoType: str, presType: str):
     #aniLocal = animation.FuncAnimation(figLocal, animate("LOCAL_PING"), interval=1000)
     #aniTarget = animation.FuncAnimation(figTarget, animate("TARGET_PING"), interval=1000)
 
@@ -215,7 +219,7 @@ def LiveVis(infoType: str):
                 # print(localLineSplit)                                                     #DEBUG
 
                 # Retrieve package sequence (Ie: number of package being sent)
-                localIndex: float = float(localLineSplit[4].strip("icmp_seq=")) + (tests - 20)
+                localIndex: float = float(localLineSplit[4].strip("icmp_seq=")) + (tests - testsPerIteration)
 
                 # Retrieve latency of package (in milliseconds)
                 localPingLatency: float = float(localLineSplit[6].strip("time="))
@@ -232,7 +236,12 @@ def LiveVis(infoType: str):
 
         # plot and Set axis dimensions
         localGraph.plot(localPingsX, localPingsY)
-        localGraph.axis([1, max(localPingsX), 1, max(localPingsY) + 5])
+
+        if(presType == "VERBOSE"):
+            localGraph.axis([1, max(localPingsX), 1, max(localPingsY)])
+        elif(presType == "SHORT"):
+            localGraph.axis([localPingsX[tests - testsPerIteration], max(localPingsX), 1, max(localPingsY)])
+
         localGraph.title.set_text('Local Latency')
 
     elif infoType == "TARGET_PING":
@@ -253,9 +262,9 @@ def LiveVis(infoType: str):
                 # print(targetLineSplit)                                                     #DEBUG
                 # Retrieve package sequence (Ie: number of package being sent)
                 try:
-                    targetIndex = float(targetLineSplit[4].strip("icmp_seq=")) + tests - 20
+                    targetIndex = float(targetLineSplit[4].strip("icmp_seq=")) + tests - testsPerIteration
                 except ValueError:
-                    targetIndex = float(targetLineSplit[5].strip("icmp_seq=")) + tests - 20
+                    targetIndex = float(targetLineSplit[5].strip("icmp_seq=")) + tests - testsPerIteration
 
                 # Retrieve latency of package (in milliseconds)
                 try:
@@ -275,7 +284,13 @@ def LiveVis(infoType: str):
 
         # plot and Set axis dimensions
         targetGraph.plot(targetPingsX, targetPingsY)
-        targetGraph.axis([1, max(targetPingsX), 1, max(targetPingsY) + 5])
+
+
+        if(presType == "VERBOSE"):
+            targetGraph.axis([1, max(targetPingsX), 1, max(targetPingsY)])
+        elif(presType == "SHORT"):
+            targetGraph.axis([targetPingsX[tests - testsPerIteration], max(targetPingsX), 1, max(targetPingsY)])
+
         targetGraph.title.set_text('Target Latency')
 
 '''
@@ -539,27 +554,32 @@ def StaticVis(infoType: str) -> None:
 # Run data collection processes
 def DataCollect() -> None:
     # Call ping script
-    print("Pinging Website & Recording Data (This may take a bit)...")
     subprocess.run("./ping.sh", shell=True, check=True)
 
 
 def Visualize(visInfoTypes: list) -> None:
     print("Preparing visualization...")
     # calls visualize for each ping type
+    '''
+    localGraph.clear()
+    LiveVis(visInfoTypes[0], "VERBOSE")
+    targetGraph.clear()
+    LiveVis(visInfoTypes[1], "VERBOSE")
+    '''
 
-    plt.xlabel("Number of Packet sent")
-    plt.ylabel("Latency (in ms)")
 
     localGraph.clear()
-    LiveVis(visInfoTypes[0])
+    LiveVis(visInfoTypes[0], "SHORT")
     targetGraph.clear()
-    LiveVis(visInfoTypes[1])
+    LiveVis(visInfoTypes[1], "SHORT")
+
+    plt.xlabel("Number of Packets sent")
+    plt.ylabel("Latency (in ms)")
+
     figure.canvas.draw()
 
     # Show whichever plot was constructed by function call
-    plt.gcf().subplots_adjust(bottom=0.15)
-    plt.gcf().subplots_adjust(left=0.15)
-    plt.gcf().subplots_adjust(right=0.9)
+
     #plt.show()
 
 
@@ -570,6 +590,7 @@ def Visualize(visInfoTypes: list) -> None:
 def Clean() -> None:
     print("Cleaning...")
     subprocess.run("./rm.sh", shell=True, check=True)
+
 
 
 #Main
@@ -590,7 +611,7 @@ if __name__ == "__main__":
             collectionThread.start()
             collectionThread.join()
 
-            tests += 20
+            tests += testsPerIteration
 
             # Visualization
             visThread = threading.Thread(target=Visualize(["LOCAL_PING", "TARGET_PING"]))
